@@ -144,10 +144,12 @@ while ((Ntraces/2)-i) > 0 ,
         %fname1=[save_file '\' newfolder  '\film' fname ' tr' num2str(i) '.dat'];
         output=[time' donor(i,:)' acceptor(i,:)'];
         save(fname1,'output','-ascii') ;
+        disp(n);
     end
 
 end
 
+disp('number of molecules selected:');
 disp(N_mol-n);
 
 close all;
