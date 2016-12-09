@@ -1,5 +1,5 @@
 %Program allows to skim through traces
-%Click to measure dwelltimes.
+%'Enter' to click and measure dwelltimes.
 %Use 'b' to go to previous, 'g' to specific
 
 function s_tr3()
