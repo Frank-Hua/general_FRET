@@ -1,5 +1,6 @@
-%Program allows to skim through traces
-%Use 's' to save individual traces as .dat files.
+%Use this code to go through all traces and select the good ones.
+%Use 'c' to calculate donor leakage correction value.
+%Use 's' to save individual traces as .dat files. NO blank subtraction or donor leakage correction is applied.
 %Use 'b' to go to previous, 'g' to specific
 
 function s_tr()
@@ -22,9 +23,9 @@ fname=num2str(fname);
 disp(['hel' fname '.traces']);
 %disp(['film' fname '.traces']);
 
-timeunit=input('time unit [default=0.03 sec]  ');
+timeunit=input('time unit [default=0.075 sec]  ');
 if isempty(timeunit)
-    timeunit=0.03;
+    timeunit=0.075;
 end
 
 %select the folder to which the files need to be saved
@@ -49,20 +50,21 @@ raw=fread(fid,Ntraces*len,'int16');
 disp('Done reading data.');
 fclose(fid);
 
+LEAKAGE=0;
 
 %convert into traces
 index=(1:Ntraces*len);
 Data=zeros(Ntraces,len);
-donor=zeros(Ntraces/2,len);
-acceptor=zeros(Ntraces/2,len);
+rdonor=zeros(Ntraces/2,len);
+racceptor=zeros(Ntraces/2,len);
 total=zeros(Ntraces/2,1);
 Data(index)=raw(index);
-for i=1:(Ntraces/2),
-    donor(i,:)=Data(i*2-1,:);
-    acceptor(i,:)=Data(i*2,:);
-    tempD=sum(donor(i,(11:20)),2);
-    tempA=sum(acceptor(i,(11:20)),2);
-    total(i)=(tempA+tempD)/10.; 
+for i=1:(Ntraces/2)
+    rdonor(i,:)=Data(i*2-1,:);
+    racceptor(i,:)=Data(i*2,:);
+    tempD=sum(rdonor(i,(12:19)),2);
+    tempA=sum(racceptor(i,(12:19)),2);
+    total(i)=(tempD+tempA-LEAKAGE*tempD)/8.; 
 end
 
 time=(0:(len-1))*timeunit;
@@ -80,31 +82,54 @@ end
 fcutoff2=input('high cutoff intensity: ','s');
 cutoff2=str2num(fcutoff2);
 if isempty(cutoff2)
-    cutoff2=2500;
+    cutoff2=1000;
 end
-    
+
+index=logical((total < cutoff1)+(total > cutoff2));
+rdonor(index,:)=[];
+racceptor(index,:)=[];
+
+N_mol=size(rdonor,1);
+disp(['there are ' num2str(N_mol) ' traces']);
+
+for i=1:N_mol
+    tD(i)=sum(rdonor(i,(end-18:end-11)),2)/8.;
+    tA(i)=sum(racceptor(i,(end-18:end-11)),2)/8.;
+end
+
+figure;
+plot(tD,tA,'x');
+axis square;
+temp=axis;
+temp(1)=0;
+temp(3)=0;
+temp(2)=max(temp(2),temp(4));
+temp(4)=temp(2);
+axis(temp);
+grid on;
+zoom on;
+[donor_blank,acceptor_blank]=ginput(1);
+disp(donor_blank);
+disp(acceptor_blank);
+
+donor=rdonor-donor_blank;
+acceptor=racceptor-acceptor_blank;
+
 hdl=figure;
 i=0;
-n=0;
-N_mol=Ntraces/2;
-
-while ((Ntraces/2)-i) > 0 ,
+LC=[];
+while (N_mol-i) > 0
     i = i+1 ;
-    
-    if total(i) < cutoff1 || total(i) > cutoff2
-        n = n+1;
-        continue;
-    end
     
     %trace window
     figure(hdl);
     subplot(2,1,1);
-    plot(time,donor(i,:),'g', time,acceptor(i,:),'r', time,acceptor(i,:)+donor(i,:)+200,'k');
+    plot(time,donor(i,:),'g', time,acceptor(i,:)-LEAKAGE*donor(i,:),'r', time,donor(i,:)+acceptor(i,:)-LEAKAGE*donor(i,:)+400,'k');
     title(['  Molecule ' num2str(i) ' of ' num2str(N_mol)]);
     axis tight;
     temp=axis;
-    temp(3)=0;
-    %temp(4)=temp(4)*1.1;
+    temp(3)=-temp(4)*0.05;
+    temp(4)=temp(4)*1.1;
     if temp(4) < 800
         temp(4)=800;
     end
@@ -113,22 +138,25 @@ while ((Ntraces/2)-i) > 0 ,
     zoom on;
     
     subplot(2,1,2);
-    fretE=acceptor(i,:)./(acceptor(i,:)+donor(i,:));
-    for m=1:len,
-        if acceptor(i,m)+donor(i,m)==0
-            fretE(m)=-0.5;
+    fretE=(acceptor(i,:)-LEAKAGE*donor(i,:))./(donor(i,:)+acceptor(i,:)-LEAKAGE*donor(i,:));
+    for m=1:len
+        if donor(i,:)+acceptor(i,:)-LEAKAGE*donor(i,:)<=cutoff1*0.1
+            fretE(m)=-0.2;
         end
     end % This is to avoid undefined fretE interfering with future analysis
+    fretE(fretE>1.1)=1.1;
+    fretE(fretE<-0.2)=-0.2;
     plot(time,fretE,'b');
     axis tight;
     temp=axis;
-    temp(3)=-0.1;
+    temp(3)=-0.2;
     temp(4)=1.1;
     axis(temp);
     grid on;
     zoom on;
 
-    answer=input('press b-back,g-go,s-save  ','s');
+    answer=input('press b-back,g-go,c-correct,s-save  ','s');
+    
     if answer=='b'
         i=i-2;
     end
@@ -137,20 +165,22 @@ while ((Ntraces/2)-i) > 0 ,
         mol= input('which molecule do you choose:  ');
         i= mol-1;
     end
-
+    
+    if answer=='c'
+        [X,~]=ginput(2);
+        X=round(X/timeunit);
+        LC=[LC;mean(acceptor(i,X(1):X(2)))/mean(donor(i,X(1):X(2)))];
+        i=i-1;
+    end
+    
     %to save individual traces
     if answer=='s'
-        fname1=[save_file '\' newfolder  '\hel' fname ' tr' num2str(i) '.dat'];
-        %fname1=[save_file '\' newfolder  '\film' fname ' tr' num2str(i) '.dat'];
-        output=[time' donor(i,:)' acceptor(i,:)'];
-        save(fname1,'output','-ascii') ;
-        disp(n);
+        output=[time' rdonor(i,:)' racceptor(i,:)'];
+        save([save_file '\' newfolder  '\hel' fname '_tr' num2str(i) '.dat'],'output','-ascii');
     end
-
 end
 
-disp('number of molecules selected:');
-disp(N_mol-n);
+disp(mean(LC));
 
 close all;
 fclose('all');
