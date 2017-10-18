@@ -1,7 +1,7 @@
-%Use this code to go through all traces and select the good ones.
-%Use 'c' to calculate donor leakage correction value.
-%Use 's' to save individual traces as .dat files. NO blank subtraction or donor leakage correction is applied.
-%Use 'b' to go to previous, 'g' to specific
+%% Use this code to go through all traces and select the good ones.
+%  Use 'c' to calculate donor leakage correction value.
+%  Use 's' to save individual traces as .dat files. NO blank subtraction or donor leakage correction is applied.
+%  Use 'b' to go to the previous molecule, and 'g' to go to a specific molecule.
 
 function s_tr()
 close all;
@@ -64,13 +64,13 @@ for i=1:(Ntraces/2)
     racceptor(i,:)=Data(i*2,:);
     tempD=sum(rdonor(i,(12:19)),2);
     tempA=sum(racceptor(i,(12:19)),2);
-    total(i)=(tempD+tempA-LEAKAGE*tempD)/8.; 
+    total(i)=(tempD+tempA)/8.; 
 end
 
 time=(0:(len-1))*timeunit;
 
 figure;
-hist(total,80);
+hist(total,0:50:2000);
 grid on;
 zoom on;
 
@@ -126,7 +126,7 @@ while (N_mol-i) > 0
     subplot(2,1,1);
     plot(time,donor(i,:),'g', time,acceptor(i,:)-LEAKAGE*donor(i,:),'r', time,donor(i,:)+acceptor(i,:)-LEAKAGE*donor(i,:)+400,'k');
     title(['  Molecule ' num2str(i) ' of ' num2str(N_mol)]);
-    axis tight;
+%     axis tight;
     temp=axis;
     temp(3)=-temp(4)*0.05;
     temp(4)=temp(4)*1.1;
@@ -140,14 +140,14 @@ while (N_mol-i) > 0
     subplot(2,1,2);
     fretE=(acceptor(i,:)-LEAKAGE*donor(i,:))./(donor(i,:)+acceptor(i,:)-LEAKAGE*donor(i,:));
     for m=1:len
-        if donor(i,:)+acceptor(i,:)-LEAKAGE*donor(i,:)<=cutoff1*0.1
+        if donor(i,:)+acceptor(i,:)-LEAKAGE*donor(i,:)<=0
             fretE(m)=-0.2;
         end
     end % This is to avoid undefined fretE interfering with future analysis
     fretE(fretE>1.1)=1.1;
     fretE(fretE<-0.2)=-0.2;
     plot(time,fretE,'b');
-    axis tight;
+%     axis tight;
     temp=axis;
     temp(3)=-0.2;
     temp(4)=1.1;

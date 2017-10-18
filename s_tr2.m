@@ -1,6 +1,6 @@
-%Use this code to further analyze the selected traces by s_tr.m
-%Use 'Enter' to analyze traces. Blank subtraction and donor leakage correction are applied.
-%Use 'b' to go to previous, 'g' to specific
+%% Use this code to further analyze the selected traces by s_tr.m. A median filter is applied in FRET.
+%  Use 'f' to analyze traces. Blank subtraction and donor leakage correction are applied.
+%  Use 'b' to go to the previous molecule, and 'g' to go to a specific molecule.
 
 function s_tr2()
 close all;
@@ -68,7 +68,7 @@ donor=donor-donor_blank;
 acceptor=acceptor-acceptor_blank;
 acceptor=acceptor-LEAKAGE*donor;
 
-newfolder = ['HaMMy traces'];
+newfolder = 'HaMMy traces';
 mkdir(newfolder);
 cd([pth '\' newfolder]);
 
@@ -84,7 +84,7 @@ while (Ntraces-i) > 0
     subplot(2,10,[1 9]);
     plot(time,donor(i,:),'g', time,acceptor(i,:),'r', time,donor(i,:)+acceptor(i,:)+400,'k');
     title(['  Molecule ' num2str(i) ' of ' num2str(Ntraces)]);
-    axis tight;
+%     axis tight;
     temp=axis;
     temp(3)=-temp(4)*0.05;
     temp(4)=temp(4)*1.1;
@@ -179,22 +179,22 @@ while (Ntraces-i) > 0
 end
 
 cd(pth);
-newfolder2 = ['analysis'];
+newfolder2 = 'analysis';
 mkdir(newfolder2);
 cd([pth '\' newfolder2]);
 
-elevel=zeros(Ntraces,1);
-total=elevel;
-
-for i=1:Ntraces
-    tempD=sum(donor(i,(12:19)),2);
-    tempA=sum(acceptor(i,(12:19)),2);
-    total(i)=(tempD+tempA)/8; %frank
-    elevel(i)=(tempA)/(tempD+tempA);
-end
-
-save('intensityResult.dat','total','-ascii');
-save('FRETResult.dat','elevel','-ascii');
+% elevel=zeros(Ntraces,1);
+% total=elevel;
+% 
+% for i=1:Ntraces
+%     tempD=sum(donor(i,(12:19)),2);
+%     tempA=sum(acceptor(i,(12:19)),2);
+%     total(i)=(tempD+tempA)/8; %frank
+%     elevel(i)=(tempA)/(tempD+tempA);
+% end
+% 
+% save('intensityResult.dat','total','-ascii');
+% save('FRETResult.dat','elevel','-ascii');
 save('FRETResult_tr.dat','countsT','-ascii');
 
 cd(pth);

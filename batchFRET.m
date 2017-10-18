@@ -1,3 +1,6 @@
+%% Use this code first to build a histogram containing donor only molecules.
+%  In this step, set the LEAKAGE, donor_blank and acceptor_blank values as 0. Observe the position of the donor only peak.
+
 function batchFRET()
 
 close all;
@@ -13,7 +16,9 @@ fList=dir;
 nf=size(fList,1);
 
 fretE = [];
-LEAKAGE=0.17;
+LEAKAGE=0;
+donor_blank=0;
+acceptor_blank=0;
 for n = 3:nf
     s=fList(n).name;
     if fList(n).isdir || ~strcmp(s(end-5:end), 'traces')
@@ -31,7 +36,7 @@ for n = 3:nf
     disp('The number of traces is: ')
     disp(Ntraces/2);
 
-    %raw is a linear array, looks like it
+    %raw is a linear array, looks like so
     raw=fread(fid,Ntraces*len,'int16');
     disp('Done reading data.');
     fclose(fid);
@@ -45,19 +50,17 @@ for n = 3:nf
     acceptor=zeros(Ntraces/2,len);
     total=zeros(Ntraces/2,1);
     
-    t=12;
+    startFrame=12;
     for i=1:(Ntraces/2)
         donor(i,:)=Data(i*2-1,:);
         acceptor(i,:)=Data(i*2,:);
-%         tempD=sum(donor(i,(12:19)),2);
-%         tempA=sum(acceptor(i,(12:19)),2);
-        tempD=sum(donor(i,(t:t+7)),2);
-        tempA=sum(acceptor(i,(t:t+7)),2);
-        total(i)=(tempA+tempD)/8.;
+        tempD=sum(donor(i,(startFrame:startFrame+7)),2);
+        tempA=sum(acceptor(i,(startFrame:startFrame+7)),2);
+        total(i)=(tempD+tempA)/8.-donor_blank-acceptor_blank;
     end
 
     hdl = figure;
-    hist(total,80);
+    hist(total,0:50:2000);
     grid on;
     zoom on;
 
@@ -76,13 +79,9 @@ for n = 3:nf
         if total(i) < cutoff1 || total(i) > cutoff2
             continue;
         end
-
-%         tempD=sum(donor(i,(12:19)),2);
-%         tempA=sum(acceptor(i,(12:19)),2);
-%         fretE=[fretE (tempA-LEAKAGE*tempD)/(tempD+tempA-LEAKAGE*tempD)];
-        tempD=sum(donor(i,(t:t+7)),2);
-        tempA=sum(acceptor(i,(t:t+7)),2);
-        fretE=[fretE (tempA-LEAKAGE*tempD)/(tempD+tempA-LEAKAGE*tempD)];
+        tempD=sum(donor(i,(startFrame:startFrame+7)),2)-8*donor_blank;
+        tempA=sum(acceptor(i,(startFrame:startFrame+7)),2)-8*acceptor_blank;
+        fretE=[fretE;(tempA-LEAKAGE*tempD)/(tempD+tempA-LEAKAGE*tempD)];
     end
     close(hdl);
 end
@@ -91,6 +90,8 @@ hist(fretE, -0.0875:0.025:1.0125);
 [counts,centers]=hist(fretE, -0.0875:0.025:1.0125);
 centers=centers';
 counts=counts';
+
+save('FRET histogram.dat','counts','-ascii');
 
 fclose('all');
 
