@@ -84,7 +84,7 @@ while (Ntraces-i) > 0
     subplot(2,10,[1 9]);
     plot(time,donor(i,:),'g', time,acceptor(i,:),'r', time,donor(i,:)+acceptor(i,:)+400,'k');
     title(['  Molecule ' num2str(i) ' of ' num2str(Ntraces)]);
-%     axis tight;
+    axis tight;
     temp=axis;
     temp(3)=-temp(4)*0.05;
     temp(4)=temp(4)*1.1;

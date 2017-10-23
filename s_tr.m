@@ -126,7 +126,7 @@ while (N_mol-i) > 0
     subplot(2,1,1);
     plot(time,donor(i,:),'g', time,acceptor(i,:)-LEAKAGE*donor(i,:),'r', time,donor(i,:)+acceptor(i,:)-LEAKAGE*donor(i,:)+400,'k');
     title(['  Molecule ' num2str(i) ' of ' num2str(N_mol)]);
-%     axis tight;
+    axis tight;
     temp=axis;
     temp(3)=-temp(4)*0.05;
     temp(4)=temp(4)*1.1;
@@ -147,7 +147,7 @@ while (N_mol-i) > 0
     fretE(fretE>1.1)=1.1;
     fretE(fretE<-0.2)=-0.2;
     plot(time,fretE,'b');
-%     axis tight;
+    axis tight;
     temp=axis;
     temp(3)=-0.2;
     temp(4)=1.1;
