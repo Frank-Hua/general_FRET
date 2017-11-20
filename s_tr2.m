@@ -74,6 +74,8 @@ cd([pth '\' newfolder]);
 
 hdl=figure;
 i=0;
+timeClicked=[];
+FRETClicked=[];
 countsT=[];
 
 while (Ntraces-i) > 0
@@ -96,7 +98,8 @@ while (Ntraces-i) > 0
     zoom on;
     
     subplot(2,10,[11 19]);
-    fretE = medfilt1(acceptor(i,:),3)./(medfilt1(donor(i,:),3)+medfilt1(acceptor(i,:),3));
+%     fretE = medfilt1(acceptor(i,:),3)./(medfilt1(donor(i,:),3)+medfilt1(acceptor(i,:),3));
+    fretE = acceptor(i,:)./(donor(i,:)+acceptor(i,:));
     for m=1:len
         if acceptor(i,m)+donor(i,m)<=0
             fretE(m)=-0.2;
@@ -126,6 +129,18 @@ while (Ntraces-i) > 0
     if answer=='g'
         mol= input('which molecule do you choose:  ');
         i= mol-1;
+    end
+    
+    if answer=='t'
+        [X,~]=ginput(3);
+        X=X';
+        timeClicked=[timeClicked;X];
+    end
+    
+    if answer=='y'
+        [~,Y]=ginput(2);
+        Y=Y';
+        FRETClicked=[FRETClicked;Y];
     end
     
     if answer=='f'
@@ -195,6 +210,8 @@ cd([pth '\' newfolder2]);
 % 
 % save('intensityResult.dat','total','-ascii');
 % save('FRETResult.dat','elevel','-ascii');
+save('time_clicked.dat','timeClicked','-ascii');
+save('FRET_clicked.dat','FRETClicked','-ascii');
 save('FRETResult_tr.dat','countsT','-ascii');
 
 cd(pth);

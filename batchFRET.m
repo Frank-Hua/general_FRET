@@ -16,7 +16,7 @@ fList=dir;
 nf=size(fList,1);
 
 fretE = [];
-LEAKAGE=0;
+LEAKAGE=0.20;
 donor_blank=0;
 acceptor_blank=0;
 for n = 3:nf
