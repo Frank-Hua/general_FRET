@@ -76,6 +76,7 @@ hdl=figure;
 i=0;
 timeClicked=[];
 FRETClicked=[];
+donorNormalized=[];
 countsT=[];
 
 while (Ntraces-i) > 0
@@ -118,7 +119,7 @@ while (Ntraces-i) > 0
 
     answer=input('press b-back,g-go,enter-FRET histogram  ','s');
     if isempty(answer)
-        answer='f';
+        answer='p';
     end
     disp(answer);
     
@@ -141,6 +142,13 @@ while (Ntraces-i) > 0
         [~,Y]=ginput(2);
         Y=Y';
         FRETClicked=[FRETClicked;Y];
+    end
+    
+    if answer=='p'
+        [X,Y]=ginput(1);
+        X=round(X/timeunit);
+        donor(i,X:end)=-Y;
+        donorNormalized=[donorNormalized donor(i,:)'/Y];
     end
     
     if answer=='f'
@@ -193,6 +201,12 @@ while (Ntraces-i) > 0
     
 end
 
+donorMean=[];
+for n = 1:size(donorNormalized,1)
+    temp=donorNormalized(n,:);
+    donorMean(n,1)=mean(temp(temp>=0));
+end
+
 cd(pth);
 newfolder2 = 'analysis';
 mkdir(newfolder2);
@@ -212,6 +226,8 @@ cd([pth '\' newfolder2]);
 % save('FRETResult.dat','elevel','-ascii');
 save('time_clicked.dat','timeClicked','-ascii');
 save('FRET_clicked.dat','FRETClicked','-ascii');
+save('donor_normalized.dat','donorNormalized','-ascii');
+save('donor_mean.dat','donorMean','-ascii');
 save('FRETResult_tr.dat','countsT','-ascii');
 
 cd(pth);
